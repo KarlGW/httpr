@@ -62,9 +62,9 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 			return resp, err
 		}
 
-		dur := tr.rp.Backoff(tr.rp.MinDelay, tr.rp.MaxDelay, retries)
+		delay := tr.rp.Backoff(tr.rp.MinDelay, tr.rp.MaxDelay, retries)
 		select {
-		case <-time.After(dur):
+		case <-time.After(delay):
 			retries++
 			if err := drainResponse(resp); err != nil {
 				return nil, err

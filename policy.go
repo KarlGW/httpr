@@ -49,8 +49,8 @@ var defaultShouldRetry = StandardShouldRetry
 
 // ExponentialBackoff provides backoff with an increasing delay from min delay,
 // to max delay.
-func ExponentialBackoff(delay, maxDelay time.Duration, retry int) time.Duration {
-	d := delay * time.Duration(math.Pow(2, float64(retry)))
+func ExponentialBackoff(minDelay, maxDelay time.Duration, retry int) time.Duration {
+	d := minDelay * time.Duration(math.Pow(2, float64(retry)))
 	if d >= maxDelay {
 		d = maxDelay
 	}
