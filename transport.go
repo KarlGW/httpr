@@ -44,8 +44,8 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if tr.rp.IsZero() {
 		tr.rp = defaultRetryPolicy()
 	}
-	if tr.rp.Retry == nil {
-		tr.rp.Retry = func(r *http.Response, err error) bool {
+	if tr.rp.ShouldRetry == nil {
+		tr.rp.ShouldRetry = func(r *http.Response, err error) bool {
 			return false
 		}
 	}
@@ -58,7 +58,7 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	retries := 0
 	for {
 		resp, err := tr.tr.RoundTrip(r)
-		if !tr.rp.Retry(resp, err) || retries >= tr.rp.MaxRetries {
+		if !tr.rp.ShouldRetry(resp, err) || retries >= tr.rp.MaxRetries {
 			return resp, err
 		}
 

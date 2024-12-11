@@ -9,25 +9,27 @@ import (
 // Backoff is a function that provides delays between retries with backoff.
 type Backoff func(delay, maxDelay time.Duration, retry int) time.Duration
 
-// Retry is a function that evaluates if a retry should be done.
-type Retry func(r *http.Response, err error) bool
+// ShouldRetry is a function that evaluates if a retry should be done.
+type ShouldRetry func(r *http.Response, err error) bool
 
 // RetryPolicy contains rules for retries.
 type RetryPolicy struct {
-	Retry      Retry
-	Backoff    Backoff
-	MinDelay   time.Duration
-	MaxDelay   time.Duration
-	MaxRetries int
+	ShouldRetry ShouldRetry
+	Backoff     Backoff
+	MinDelay    time.Duration
+	MaxDelay    time.Duration
+	MaxRetries  int
 }
 
 // IsZero returns true if the RetryPolicy is the zero value.
 func (r RetryPolicy) IsZero() bool {
-	return r.Retry == nil && r.Backoff == nil && r.MinDelay == 0 && r.MaxDelay == 0 && r.MaxRetries == 0
+	return r.ShouldRetry == nil && r.Backoff == nil && r.MinDelay == 0 && r.MaxDelay == 0 && r.MaxRetries == 0
 }
 
-// standardRetry is the standard implementation of retry.
-func standardRetry(r *http.Response, err error) bool {
+// StandardShouldRetry is a standard implementation of ShouldRetry.
+// It will retry on client errors and on response errors
+// with status codes: 408, 429, 500, 502, 503 and 504.
+func StandardShouldRetry(r *http.Response, err error) bool {
 	if err != nil {
 		return true
 	}
@@ -42,12 +44,12 @@ func standardRetry(r *http.Response, err error) bool {
 	return false
 }
 
-// defaultRetry is the default implementation of retry.
-var defaultRetry = standardRetry
+// defaultShouldRetry is the default implementation of ShouldRetry.
+var defaultShouldRetry = StandardShouldRetry
 
-// exponentialBackoff provides backoff with an increasing delay from min delay,
+// ExponentialBackoff provides backoff with an increasing delay from min delay,
 // to max delay.
-func exponentialBackoff(delay, maxDelay time.Duration, retry int) time.Duration {
+func ExponentialBackoff(delay, maxDelay time.Duration, retry int) time.Duration {
 	d := delay * time.Duration(math.Pow(2, float64(retry)))
 	if d >= maxDelay {
 		d = maxDelay
@@ -55,16 +57,16 @@ func exponentialBackoff(delay, maxDelay time.Duration, retry int) time.Duration 
 	return d
 }
 
-// defaultBackoff is the default implementation of backoff.
-var defaultBackoff = exponentialBackoff
+// defaultBackoff is the default implementation of Backoff.
+var defaultBackoff = ExponentialBackoff
 
 // defaultRetryPolicy returns the default retry policy.
 func defaultRetryPolicy() RetryPolicy {
 	return RetryPolicy{
-		Backoff:    defaultBackoff,
-		Retry:      defaultRetry,
-		MinDelay:   500 * time.Millisecond,
-		MaxDelay:   5 * time.Second,
-		MaxRetries: 3,
+		Backoff:     defaultBackoff,
+		ShouldRetry: defaultShouldRetry,
+		MinDelay:    500 * time.Millisecond,
+		MaxDelay:    5 * time.Second,
+		MaxRetries:  3,
 	}
 }

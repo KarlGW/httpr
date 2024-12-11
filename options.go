@@ -11,7 +11,8 @@ func WithRetryPolicy(retryPolicy RetryPolicy) Option {
 	}
 }
 
-// WithTransport sets the underlying transport.
+// WithTransport sets the underlying transport. Use when
+// other custom transports are needed.
 func WithTransport(transport http.RoundTripper) Option {
 	return func(t *Transport) {
 		if t != nil {
