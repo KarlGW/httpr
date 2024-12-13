@@ -16,7 +16,7 @@ type ShouldRetry func(r *http.Response, err error) bool
 type RetryPolicy struct {
 	// ShouldRetry is a function that evaluates if a retry should be done.
 	ShouldRetry ShouldRetry
-	// Backoff is a function that provides delays between retries with backoff.
+	// Backoff is a function that provides backoff between retries.
 	Backoff Backoff
 	// MaxRetries is the maximum amount of retries.
 	MaxRetries int
