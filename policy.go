@@ -1,7 +1,7 @@
 package httpr
 
 import (
-	"math/rand/v2"
+	"math/rand"
 	"net/http"
 	"time"
 )
