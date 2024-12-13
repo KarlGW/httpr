@@ -17,6 +17,14 @@ type Option func(t *Transport)
 
 // New creates and configures a new transport. If no
 // retry policy is provided a default one will be set.
+//
+// The default retry policy has retries with exponential backoff with
+// the foloowing values:
+//
+// MaxRetries: 3, MinDelay: 500ms, MaxDelay: 5s and Jitter: 0.2
+//
+// It retries on client errors and HTTP statuses:
+// 408, 429, 500, 502, 503 and 504.
 func New(options ...Option) *Transport {
 	tr := &Transport{}
 	for _, option := range options {
@@ -33,6 +41,14 @@ func New(options ...Option) *Transport {
 
 // NewTansport creates and configures a new transport. If no
 // retry policy is provided a default one will be set.
+//
+// The default retry policy has retries with exponential backoff with
+// the foloowing values:
+//
+// MaxRetries: 3, MinDelay: 500ms, MaxDelay: 5s and Jitter: 0.2
+//
+// It retries on client errors and HTTP statuses:
+// 408, 429, 500, 502, 503 and 504.
 var NewTransport = New
 
 // RoundTrip satisfies the http.RoundTripper interface and performs an
@@ -50,10 +66,11 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		}
 	}
 	if tr.rp.Backoff == nil {
-		tr.rp.Backoff = func(delay, maxDelay time.Duration, retry int) time.Duration {
+		tr.rp.Backoff = func(minDelay, maxDelay time.Duration, jitter float64) time.Duration {
 			return 0
 		}
 	}
+	backoff := tr.rp.Backoff
 
 	retries := 0
 	for {
@@ -62,7 +79,7 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 			return resp, err
 		}
 
-		delay := tr.rp.Backoff(tr.rp.MinDelay, tr.rp.MaxDelay, retries)
+		delay := backoff(tr.rp.MinDelay, tr.rp.MaxDelay, tr.rp.Jitter)
 		select {
 		case <-time.After(delay):
 			retries++
@@ -75,6 +92,13 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		case <-r.Context().Done():
 			return nil, r.Context().Err()
 		}
+	}
+}
+
+// Set configures the transport with the provided options.
+func (tr *Transport) Set(options ...Option) {
+	for _, option := range options {
+		option(tr)
 	}
 }
 

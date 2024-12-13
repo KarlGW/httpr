@@ -38,10 +38,11 @@ func ExampleNew_withOptions() {
 	client := &http.Client{
 		Transport: httpr.New(httpr.WithRetryPolicy(httpr.RetryPolicy{
 			ShouldRetry: httpr.StandardShouldRetry,
-			Backoff:     httpr.ExponentialBackoff,
+			Backoff:     httpr.ExponentialBackoff(),
+			MaxRetries:  3,
 			MinDelay:    500 * time.Millisecond,
 			MaxDelay:    5 * time.Second,
-			MaxRetries:  3,
+			Jitter:      0.2,
 		})),
 	}
 
@@ -92,10 +93,11 @@ func ExampleNewTransport_withOptions() {
 	client := &http.Client{
 		Transport: httpr.NewTransport(httpr.WithRetryPolicy(httpr.RetryPolicy{
 			ShouldRetry: httpr.StandardShouldRetry,
-			Backoff:     httpr.ExponentialBackoff,
+			Backoff:     httpr.ExponentialBackoff(),
+			MaxRetries:  3,
 			MinDelay:    500 * time.Millisecond,
 			MaxDelay:    5 * time.Second,
-			MaxRetries:  3,
+			Jitter:      0.2,
 		})),
 	}
 

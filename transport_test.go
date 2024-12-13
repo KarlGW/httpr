@@ -42,11 +42,11 @@ func TestTransport_RoundTrip(t *testing.T) {
 					return req
 				},
 				retryPolicy: RetryPolicy{
-					ShouldRetry: defaultShouldRetry,
-					Backoff:     defaultBackoff,
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 			},
 			want: want{
@@ -63,10 +63,10 @@ func TestTransport_RoundTrip(t *testing.T) {
 				},
 				retryPolicy: RetryPolicy{
 					ShouldRetry: StandardShouldRetry,
-					Backoff:     defaultBackoff,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 				retries: 3,
 				err:     errors.New("error"),
@@ -84,11 +84,11 @@ func TestTransport_RoundTrip(t *testing.T) {
 					return req
 				},
 				retryPolicy: RetryPolicy{
-					ShouldRetry: defaultShouldRetry,
-					Backoff:     defaultBackoff,
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 				retries: 4,
 				err:     errors.New("error"),
@@ -108,11 +108,11 @@ func TestTransport_RoundTrip(t *testing.T) {
 					return req
 				},
 				retryPolicy: RetryPolicy{
-					ShouldRetry: defaultShouldRetry,
-					Backoff:     defaultBackoff,
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 				retries: 4,
 				err:     errors.New("error"),
@@ -131,11 +131,11 @@ func TestTransport_RoundTrip(t *testing.T) {
 					return req
 				},
 				retryPolicy: RetryPolicy{
-					ShouldRetry: defaultShouldRetry,
-					Backoff:     defaultBackoff,
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 			},
 			want: want{
@@ -151,11 +151,11 @@ func TestTransport_RoundTrip(t *testing.T) {
 					return req
 				},
 				retryPolicy: RetryPolicy{
-					ShouldRetry: defaultShouldRetry,
-					Backoff:     defaultBackoff,
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
 					MinDelay:    1 * time.Millisecond,
 					MaxDelay:    5 * time.Millisecond,
-					MaxRetries:  3,
 				},
 				retries: 3,
 				err:     errors.New("error"),
