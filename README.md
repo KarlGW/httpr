@@ -11,7 +11,6 @@
 * [Usage](#usage)
   * [Retry policy](#retry-policy)
   * [Additional transports](#additional-transports)
-  * [No retries](#no-retries)
 
 
 This module provides a transport (`http.RoundTripper`) with retry functionality that can be used with the standard library HTTP client.
