@@ -1,6 +1,7 @@
 package httpr
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"time"
@@ -51,9 +52,8 @@ func New(options ...Option) *Transport {
 // 408, 429, 500, 502, 503 and 504.
 var NewTransport = New
 
-// RoundTrip satisfies the http.RoundTripper interface and performs an
-// http request with the configured retry policy.
-func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
+// setup sets the default values for the transport when they are not provided.
+func (tr *Transport) setup() {
 	if tr.tr == nil {
 		tr.tr = http.DefaultTransport
 	}
@@ -68,6 +68,17 @@ func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if tr.rp.Backoff == nil {
 		tr.rp.Backoff = func(minDelay, maxDelay time.Duration, jitter float64) time.Duration {
 			return 0
+		}
+	}
+}
+
+// RoundTrip satisfies the http.RoundTripper interface and performs an
+// http request with the configured retry policy.
+func (tr *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
+	tr.setup()
+	if r.Body != nil && r.GetBody == nil {
+		if err := setGetBody(r); err != nil {
+			return nil, err
 		}
 	}
 	backoff := tr.rp.Backoff
@@ -124,6 +135,21 @@ func drainResponse(r *http.Response) error {
 	defer r.Body.Close()
 	if _, err := io.Copy(io.Discard, r.Body); err != nil {
 		return err
+	}
+	return nil
+}
+
+// setGetBody sets the GetBody method on the request
+func setGetBody(r *http.Request) error {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	r.Body = io.NopCloser(bytes.NewReader(body))
+	r.ContentLength = int64(len(body))
+
+	r.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(body)), nil
 	}
 	return nil
 }
