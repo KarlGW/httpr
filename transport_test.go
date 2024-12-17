@@ -9,11 +9,63 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
+
+func TestNew(t *testing.T) {
+	var tests = []struct {
+		name  string
+		input []Option
+		want  *Transport
+	}{
+		{
+			name: "default transport",
+			want: &Transport{
+				tr: http.DefaultTransport,
+				rp: defaultRetryPolicy(),
+			},
+		},
+		{
+			name: "with retry policy",
+			input: []Option{
+				WithRetryPolicy(RetryPolicy{
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  5,
+					MinDelay:    1 * time.Second,
+					MaxDelay:    10 * time.Second,
+					Jitter:      0.1,
+				}),
+			},
+			want: &Transport{
+				tr: http.DefaultTransport,
+				rp: RetryPolicy{
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  5,
+					MinDelay:    1 * time.Second,
+					MaxDelay:    10 * time.Second,
+					Jitter:      0.1,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := New(test.input...)
+
+			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(Transport{}, http.Transport{}), cmpopts.IgnoreUnexported(http.Transport{}), cmpopts.IgnoreFields(RetryPolicy{}, "ShouldRetry", "Backoff"), cmpopts.IgnoreFields(http.Transport{}, "Proxy", "DialContext")); diff != "" {
+				t.Errorf("New() = unexpected result (-want +got)\n%s\n", diff)
+			}
+		})
+	}
+}
 
 func TestTransport_RoundTrip(t *testing.T) {
 	type input struct {
@@ -148,6 +200,33 @@ func TestTransport_RoundTrip(t *testing.T) {
 			input: input{
 				req: func() *http.Request {
 					req, _ := http.NewRequest(http.MethodPost, "http://example.com", bytes.NewReader(wantBodyPost))
+					return req
+				},
+				retryPolicy: RetryPolicy{
+					ShouldRetry: StandardShouldRetry,
+					Backoff:     ExponentialBackoff(),
+					MaxRetries:  3,
+					MinDelay:    1 * time.Millisecond,
+					MaxDelay:    5 * time.Millisecond,
+				},
+				retries: 3,
+				err:     errors.New("error"),
+			},
+			want: want{
+				statusCode: http.StatusOK,
+				body:       wantBodyPost,
+			},
+		},
+		{
+			name: "successful POST with retries - request literal",
+			input: input{
+				req: func() *http.Request {
+					u, _ := url.Parse("http://example.com")
+					req := &http.Request{
+						Method: http.MethodPost,
+						URL:    u,
+						Body:   io.NopCloser(bytes.NewReader(wantBodyPost)),
+					}
 					return req
 				},
 				retryPolicy: RetryPolicy{
