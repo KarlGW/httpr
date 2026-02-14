@@ -18,7 +18,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		name  string
 		input []Option
 		want  *Transport
@@ -60,7 +60,14 @@ func TestNew(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got := New(test.input...)
 
-			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(Transport{}, http.Transport{}), cmpopts.IgnoreUnexported(http.Transport{}), cmpopts.IgnoreFields(RetryPolicy{}, "ShouldRetry", "Backoff"), cmpopts.IgnoreFields(http.Transport{}, "Proxy", "DialContext")); diff != "" {
+			if diff := cmp.Diff(
+				test.want,
+				got,
+				cmp.AllowUnexported(Transport{}, http.Transport{}),
+				cmpopts.IgnoreUnexported(http.Transport{}),
+				cmpopts.IgnoreFields(RetryPolicy{}, "ShouldRetry", "Backoff"),
+				cmpopts.IgnoreFields(http.Transport{}, "Proxy", "DialContext"),
+			); diff != "" {
 				t.Errorf("New() = unexpected result (-want +got)\n%s\n", diff)
 			}
 		})
@@ -80,7 +87,7 @@ func TestTransport_RoundTrip(t *testing.T) {
 		body       []byte
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		name    string
 		input   input
 		want    want
@@ -322,6 +329,8 @@ func setupClient(target string, rp RetryPolicy, err error) *http.Client {
 	}
 }
 
-var wantBodyGet = []byte(`{"message":"hello"}`)
-var wantBodyPost = []byte(`{"message":"post"}`)
-var errTestClient = errors.New("client error")
+var (
+	wantBodyGet   = []byte(`{"message":"hello"}`)
+	wantBodyPost  = []byte(`{"message":"post"}`)
+	errTestClient = errors.New("client error")
+)
