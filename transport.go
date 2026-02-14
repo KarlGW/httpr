@@ -40,7 +40,7 @@ func New(options ...Option) *Transport {
 	return tr
 }
 
-// NewTansport creates and configures a new transport. If no
+// NewTransport creates and configures a new transport. If no
 // retry policy is provided a default one will be set.
 //
 // The default retry policy has retries with exponential backoff with
